@@ -85,7 +85,7 @@ constexpr Head& get(::tuple<Head, Tail...>& t) noexcept {
 
 int main() {
     const char* hello = "hello";
-    tuple<int, double, std::string> elem = ::make_tuple(3, 2.0, "hello");
+    tuple<int, double, std::string> elem = ::make_tuple(3, 2.0, hello);
     tuple<int, tuple<int, double, std::string>> t(9, elem);
 
     std::cout << ::get<0>(t) << std::endl;
