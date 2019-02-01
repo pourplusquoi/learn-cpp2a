@@ -1,6 +1,9 @@
 #ifndef UNWRAP_REFWRAPPER_H
 #define UNWRAP_REFWRAPPER_H
 
+#include <functional>
+#include <type_traits>
+
 template <class T>
 struct unwrap_refwrapper {
     using type = T;
