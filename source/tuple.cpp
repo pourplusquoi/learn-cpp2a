@@ -18,16 +18,14 @@ struct tuple<Head, Tail...> {
         typename = std::enable_if_t<
             std::is_convertible<H, Head>::value>>
     tuple(H&& head, T&&... tail) :
-        elem(std::forward<H>(head)),
-        next(std::forward<T>(tail)...) {}
+        elem(std::forward<H>(head)), next(std::forward<T>(tail)...) {}
 
     template <
         typename H,
         typename... T,
         typename = std::enable_if_t<
             std::is_convertible<H, Head>::value>>
-    tuple(const ::tuple<H, T...>& t) : 
-        elem(t.elem), next(t.next) {};
+    tuple(const ::tuple<H, T...>& t) : elem(t.elem), next(t.next) {}
 };
 
 template <class... Types>
