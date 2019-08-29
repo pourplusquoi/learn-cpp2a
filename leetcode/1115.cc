@@ -9,10 +9,7 @@ private:
     bool flip;
 
 public:
-    FooBar(int n) {
-        this->n = n;
-        flip = true;
-    }
+    FooBar(int n) : n(n), flip(true) {}
 
     void foo(function<void()> printFoo) {
         for (int i = 0; i < n; i++) {
@@ -44,10 +41,7 @@ private:
     bool flip;
 
 public:
-    FooBar(int n) {
-        this->n = n;
-        flip = true;
-    }
+    FooBar(int n) : n(n), flip(true) {}
 
     void foo(function<void()> printFoo) {
         for (int i = 0; i < n; i++) {
