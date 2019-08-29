@@ -12,11 +12,7 @@ private:
     int state;
 
 public:
-    ZeroEvenOdd(int n) {
-        this->n = n;
-        this->next = 1;
-        this->state = 0;
-    }
+    ZeroEvenOdd(int n) : n(n), next(1), state(0) {}
 
     // printNumber(x) outputs "x", where x is an integer.
     void zero(function<void(int)> printNumber) {
@@ -55,18 +51,13 @@ class ZeroEvenOdd {
 private:
     int n;
     int next;
-    
     int state;
     
     std::mutex mut;
     std::condition_variable cv;
 
 public:
-    ZeroEvenOdd(int n) {
-        this->n = n;
-        this->next = 1;
-        this->state = 0;
-    }
+    ZeroEvenOdd(int n) : n(n), next(1), state(0) {}
 
     // printNumber(x) outputs "x", where x is an integer.
     void zero(function<void(int)> printNumber) {
