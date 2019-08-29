@@ -9,9 +9,7 @@ class H2O {
     std::condition_variable cv;
     
 public:
-    H2O() {
-        hy = 0, ox = 0;
-    }
+    H2O() : hy(0), ox(0) {}
 
     void hydrogen(function<void()> releaseHydrogen) {
         std::unique_lock<std::mutex> lock(mut);
