@@ -60,7 +60,7 @@ template <typename Mapper, std::size_t Fanout>
 Automaton<Mapper, Fanout>::Automaton(
     const std::vector<std::string_view>& dict) {
   root_ = std::make_unique<Node>(0, 0);
-  for (auto word : dict) {
+  for (std::string_view word : dict) {
     Insert(root_.get(), word);
   }
   // Build extra lookup links.
@@ -151,7 +151,7 @@ void Automaton<Mapper, Fanout>::Initialize() {
         node->suffix = root_.get();
         return;  // Reached root.
       }
-      auto& entry = temp->next[node->index];
+      const auto& entry = temp->next[node->index];
       if (entry != nullptr) {
         node->suffix = entry.get();
         return;
