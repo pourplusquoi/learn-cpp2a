@@ -14,7 +14,6 @@ using Length = std::size_t;
 
 using Hit = std::pair<BeginAt, Length>;
 
-template <std::size_t Fanout>
 class Matcher {
  public:
   Matcher() = default;
@@ -23,7 +22,7 @@ class Matcher {
 };
 
 template <typename Mapper, std::size_t Fanout>
-class Automaton : public Matcher<Fanout> {
+class Automaton : public Matcher {
  public:
   explicit Automaton(const std::vector<std::string_view>& dict);
   ~Automaton() override = default;
@@ -51,7 +50,7 @@ class Automaton : public Matcher<Fanout> {
   void Traverse(Node* node, std::function<void(Node* const)> action);
   void Initialize();
 
-  void RetriveMatches(Node* node, std::size_t end,
+  void CollectMatches(Node* node, std::size_t end,
                       std::vector<Hit>* hits) const;
 
   std::unique_ptr<Node> root_;
@@ -79,7 +78,7 @@ std::vector<Hit> Automaton<Mapper, Fanout>::Match(
     while (temp != nullptr) {
       const auto& entry = temp->next[index];
       if (entry != nullptr) {  // Found match.
-        RetriveMatches(entry.get(), i + 1, &hits);
+        CollectMatches(entry.get(), i + 1, &hits);
         cursor = entry.get();
         break;
       } else {  // No match found.
@@ -95,12 +94,12 @@ std::vector<Hit> Automaton<Mapper, Fanout>::Match(
 }
 
 template <typename Mapper, std::size_t Fanout>
-void Automaton<Mapper, Fanout>::RetriveMatches(
+void Automaton<Mapper, Fanout>::CollectMatches(
     Node* node, std::size_t end_at, std::vector<Hit>* hits) const {
   if (node->in_dict) {
     hits->emplace_back(end_at - node->depth, node->depth);
   }
-  // Retrive dict suffix matches.
+  // Collect dict suffix matches.
   while (true) {
     node = node->dict_suffix;
     if (node == nullptr) {
@@ -185,10 +184,10 @@ struct Mapper {
 };
 
 int main() {
-  std::unique_ptr<Matcher<256>> matcher =
+  std::unique_ptr<Matcher> matcher =
       std::make_unique<Automaton<Mapper, 256>>(
-          std::vector<std::string_view>{
-              "hello", "world", "hell", "low", "or", "a", "the", "and"});
+          std::vector<std::string_view>{"hello", "world", "hell", "low",
+                                        "or", "a", "the", "and", "in"});
   
   std::string_view text(
       "Nineteen Eighty-Four is set in Oceania, one of three inter-continental "
