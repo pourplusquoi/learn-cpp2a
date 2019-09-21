@@ -9,7 +9,10 @@
 #include <utility>
 #include <vector>
 
-using Hit = std::pair<std::size_t, std::size_t>;
+using BeginAt = std::size_t;
+using Length = std::size_t;
+
+using Hit = std::pair<BeginAt, Length>;
 
 template <std::size_t Fanout>
 class Matcher {
@@ -236,13 +239,13 @@ int main() {
   std::vector<Hit> hits = matcher->Match(text);
 
   std::cout << "\n";
-  std::unordered_map<std::string_view, std::vector<std::size_t>> stats;
+  std::unordered_map<std::string_view, std::vector<BeginAt>> stats;
   for (const Hit& hit : hits) {
     stats[text.substr(hit.first, hit.second)].emplace_back(hit.first);
   }
   for (const auto& entry : stats) {
     std::cout << "Found occurrance of '" << entry.first << "':";
-    for (std::size_t begin_at : entry.second) {
+    for (BeginAt begin_at : entry.second) {
       std::cout << " @" << begin_at;
     }
     std::cout << "\n\n";
