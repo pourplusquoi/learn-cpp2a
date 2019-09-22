@@ -186,53 +186,10 @@ struct Mapper {
 int main() {
   std::unique_ptr<Matcher> matcher =
       std::make_unique<Automaton<Mapper, 256>>(
-          std::vector<std::string_view>{"hello", "world", "hell", "low",
-                                        "or", "a", "the", "and", "in"});
+          std::vector<std::string_view>{"a", "ab", "bab", "bc",
+                                        "bca", "c", "caa"});
   
-  std::string_view text(
-      "Nineteen Eighty-Four is set in Oceania, one of three inter-continental "
-      "superstates that divided the world after a global war. Smith's memories "
-      "and his reading of the proscribed book, The Theory and Practice of "
-      "Oligarchical Collectivism by Emmanuel Goldstein, reveal that after the "
-      "Second World War, the United Kingdom became involved in a war during "
-      "the early 1950s in which nuclear weapons destroyed hundreds of cities "
-      "in Europe, western Russia and North America. Colchester was destroyed "
-      "and London also suffered widespread aerial raids, leading Winston's "
-      "family to take refuge in a London Underground station. Britain fell "
-      "into civil war, with street fighting in London, before the English "
-      "Socialist Party, abbreviated as Ingsoc, emerged victorious and formed a "
-      "totalitarian government in Britain. The British Commonwealth and Latin "
-      "America were absorbed by the United States, resulting in the superstate "
-      "of Oceania. Ingsoc became the sole government party in this new nation. "
-      "Simultaneously, the Soviet Union conquered continental Europe and "
-      "established the second superstate of Eurasia, under a Neo-Bolshevik "
-      "regime. The third superstate of Eastasia emerged in the Far East after "
-      "another decade of fighting, with a ruling ideology translated from "
-      "Chinese as 'Death-Worship' or 'Obliteration of the Self'. The three "
-      "superstates wage perpetual war for the remaining unconquered lands of "
-      "the world in \"a rough quadrilateral with its corners at Tangier, "
-      "Brazzaville, Darwin, and Hong Kong\" through constantly shifting "
-      "alliances. Although each of the three states are said to have sufficient "
-      "natural resources, the war continues in order to maintain ideological "
-      "control over the people. While citizens in each state are trained to "
-      "despise the ideologies of the other two as uncivilised and barbarous, "
-      "Goldstein's book, The Theory and Practice of Oligarchical Collectivism, "
-      "explains that in fact the superstates' ideologies are practically "
-      "identical and that the public's ignorance of this fact is imperative so "
-      "that they might continue believing otherwise. The only references to the "
-      "exterior world for the Oceanian citizenry (the Outer Party and the "
-      "Proles) are Ministry of Truth maps and propaganda to ensure their belief "
-      "in \"the war\". However, due to the fact that Winston barely remembers "
-      "these events and due to the Party's manipulation of historical records, "
-      "the continuity and accuracy of these events are unclear. Winston himself "
-      "notes that the Party has claimed credit for inventing helicopters, "
-      "airplanes and trains, while Julia theorises that the perpetual bombing of "
-      "London is merely a false-flag operation designed to convince the populace "
-      "that a war is occurring. If the official account was accurate, Smith's "
-      "strengthening memories and the story of his family's dissolution suggest "
-      "that the atomic bombings occurred first, followed by civil war featuring "
-      "\"confused street fighting in London itself\" and the societal postwar "
-      "reorganisation, which the Party retrospectively calls \"the Revolution\".");
+  std::string_view text("abccab");
   std::cout << "Scanning text: " << text << std::endl;
 
   std::vector<Hit> hits = matcher->Match(text);
@@ -243,7 +200,7 @@ int main() {
     stats[text.substr(hit.first, hit.second)].emplace_back(hit.first);
   }
   for (const auto& entry : stats) {
-    std::cout << "Found occurrance of '" << entry.first << "':";
+    std::cout << "Found occurrance(s) of '" << entry.first << "':";
     for (BeginAt begin_at : entry.second) {
       std::cout << " @" << begin_at;
     }
