@@ -50,7 +50,7 @@ class Automaton : public Matcher {
   void Traverse(Node* node, std::function<void(Node* const)> action);
   void Initialize();
 
-  void CollectMatches(Node* node, std::size_t end,
+  void CollectMatches(Node* node, std::size_t end_at,
                       std::vector<Hit>* hits) const;
 
   std::unique_ptr<Node> root_;
