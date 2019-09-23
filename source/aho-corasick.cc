@@ -16,7 +16,7 @@ using Hit = std::pair<BeginAt, Length>;
 
 class Matcher {
  public:
-  Matcher() = default;
+  constexpr Matcher() = default;
   virtual ~Matcher() = default;
   virtual std::vector<Hit> Match(std::string_view text) const = 0;
 };
@@ -24,7 +24,7 @@ class Matcher {
 template <typename Mapper, std::size_t Fanout>
 class Automaton : public Matcher {
  public:
-  explicit Automaton(const std::vector<std::string_view>& dict);
+  constexpr explicit Automaton(const std::vector<std::string_view>& dict);
   ~Automaton() override = default;
 
   std::vector<Hit> Match(std::string_view text) const override;
@@ -41,23 +41,23 @@ class Automaton : public Matcher {
     Node* dict_suffix;
     std::array<std::unique_ptr<Node>, Fanout> next;
 
-    Node(std::size_t depth, std::size_t index) : in_dict(false),
-                                                 depth(depth),
-                                                 index(index) {}
+    constexpr Node(std::size_t depth, std::size_t index) : 
+        in_dict(false), depth(depth), index(index) {}
   };
 
-  void Insert(Node* node, std::string_view word);
-  void Traverse(Node* node, std::function<void(Node* const)> action);
-  void Initialize();
+  constexpr void Insert(Node* node, std::string_view word);
+  constexpr void Traverse(Node* node,
+                          std::function<void(Node* const)> action);
+  constexpr void Initialize();
 
-  void CollectMatches(Node* node, std::size_t end_at,
-                      std::vector<Hit>* hits) const;
+  constexpr void CollectMatches(Node* node, std::size_t end_at,
+                                std::vector<Hit>* hits) const;
 
   std::unique_ptr<Node> root_;
 };
 
 template <typename Mapper, std::size_t Fanout>
-Automaton<Mapper, Fanout>::Automaton(
+constexpr Automaton<Mapper, Fanout>::Automaton(
     const std::vector<std::string_view>& dict) {
   root_ = std::make_unique<Node>(0, 0);
   for (std::string_view word : dict) {
@@ -94,7 +94,7 @@ std::vector<Hit> Automaton<Mapper, Fanout>::Match(
 }
 
 template <typename Mapper, std::size_t Fanout>
-void Automaton<Mapper, Fanout>::CollectMatches(
+constexpr void Automaton<Mapper, Fanout>::CollectMatches(
     Node* node, std::size_t end_at, std::vector<Hit>* hits) const {
   if (node->in_dict) {
     hits->emplace_back(end_at - node->depth, node->depth);
@@ -110,7 +110,8 @@ void Automaton<Mapper, Fanout>::CollectMatches(
 }
 
 template <typename Mapper, std::size_t Fanout>
-void Automaton<Mapper, Fanout>::Insert(Node* node, std::string_view word) {
+constexpr void Automaton<Mapper, Fanout>::Insert(Node* node,
+                                                 std::string_view word) {
   if (word.empty()) {
     node->in_dict = true;
     return;
@@ -125,7 +126,7 @@ void Automaton<Mapper, Fanout>::Insert(Node* node, std::string_view word) {
 }
 
 template <typename Mapper, std::size_t Fanout>
-void Automaton<Mapper, Fanout>::Traverse(
+constexpr void Automaton<Mapper, Fanout>::Traverse(
     Node* node, std::function<void(Node* const)> action) {
   for (auto& child : node->next) {
     if (child != nullptr) {
@@ -136,7 +137,7 @@ void Automaton<Mapper, Fanout>::Traverse(
 }
 
 template <typename Mapper, std::size_t Fanout>
-void Automaton<Mapper, Fanout>::Initialize() {
+constexpr void Automaton<Mapper, Fanout>::Initialize() {
   // Build suffix link: from each node to the node that is the longest
   // possible strict suffix of it in the graph.
   Traverse(root_.get(), [&](Node* const node) {
@@ -178,7 +179,7 @@ void Automaton<Mapper, Fanout>::Initialize() {
 }
 
 struct Mapper {
-  std::size_t operator()(char c) const {
+  constexpr std::size_t operator()(char c) const {
     return static_cast<std::size_t>(c);
   }
 };
@@ -189,13 +190,12 @@ int main() {
           std::vector<std::string_view>{"a", "ab", "bab", "bc",
                                         "bca", "c", "caa"});
   
-  std::string_view text("abccab");
+  constexpr std::string_view text("abccab");
   std::cout << "Scanning text: " << text << std::endl;
-
   std::vector<Hit> hits = matcher->Match(text);
 
-  std::cout << "\n";
   std::unordered_map<std::string_view, std::vector<BeginAt>> stats;
+  std::cout << "\n";
   for (const Hit& hit : hits) {
     stats[text.substr(hit.first, hit.second)].emplace_back(hit.first);
   }
