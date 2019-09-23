@@ -34,15 +34,16 @@ class Automaton : public Matcher {
     bool in_dict;
     const std::size_t depth;
 
-    Node* parent;
-    std::size_t index;
+    Node* const parent;
+    const std::size_t index;
 
     Node* suffix;
     Node* dict_suffix;
     std::array<std::unique_ptr<Node>, Fanout> next;
 
-    constexpr Node(std::size_t depth, std::size_t index) : 
-        in_dict(false), depth(depth), index(index) {}
+    constexpr Node(std::size_t depth, std::size_t index,
+                   Node* parent = nullptr) : 
+        in_dict(false), depth(depth), index(index), parent(parent) {}
   };
 
   constexpr void Insert(Node* node, std::string_view word);
@@ -119,8 +120,7 @@ constexpr void Automaton<Mapper, Fanout>::Insert(Node* node,
   std::size_t index = Mapper{}(word.front());
   auto& entry = node->next[index];
   if (entry == nullptr) {
-    entry = std::make_unique<Node>(node->depth + 1, index);
-    entry->parent = node;
+    entry = std::make_unique<Node>(node->depth + 1, index, node);
   }
   Insert(entry.get(), word.substr(1));
 }
