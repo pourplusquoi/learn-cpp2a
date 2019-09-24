@@ -46,13 +46,13 @@ class Automaton : public Matcher {
         in_dict(false), depth(depth), index(index), parent(parent) {}
   };
 
-  constexpr void Insert(Node* node, std::string_view word);
-  constexpr void Traverse(Node* node,
-                          std::function<void(Node* const)> action);
   constexpr void Initialize();
 
-  constexpr void CollectMatches(Node* node, std::size_t end_at,
-                                std::vector<Hit>* hits) const;
+  constexpr static void Insert(Node* node, std::string_view word);
+  constexpr static void Traverse(Node* node,
+                                 std::function<void(Node* const)> action);
+  constexpr static void CollectMatches(Node* node, std::size_t end_at,
+                                       std::vector<Hit>* hits) const;
 
   std::unique_ptr<Node> root_;
 };
@@ -95,48 +95,6 @@ std::vector<Hit> Automaton<Mapper, Fanout>::Match(
 }
 
 template <typename Mapper, std::size_t Fanout>
-constexpr void Automaton<Mapper, Fanout>::CollectMatches(
-    Node* node, std::size_t end_at, std::vector<Hit>* hits) const {
-  if (node->in_dict) {
-    hits->emplace_back(end_at - node->depth, node->depth);
-  }
-  // Collect dict suffix matches.
-  while (true) {
-    node = node->dict_suffix;
-    if (node == nullptr) {
-      break;
-    }
-    hits->emplace_back(end_at - node->depth, node->depth);
-  }
-}
-
-template <typename Mapper, std::size_t Fanout>
-constexpr void Automaton<Mapper, Fanout>::Insert(Node* node,
-                                                 std::string_view word) {
-  if (word.empty()) {
-    node->in_dict = true;
-    return;
-  }
-  std::size_t index = Mapper{}(word.front());
-  auto& entry = node->next[index];
-  if (entry == nullptr) {
-    entry = std::make_unique<Node>(node->depth + 1, index, node);
-  }
-  Insert(entry.get(), word.substr(1));
-}
-
-template <typename Mapper, std::size_t Fanout>
-constexpr void Automaton<Mapper, Fanout>::Traverse(
-    Node* node, std::function<void(Node* const)> action) {
-  for (auto& child : node->next) {
-    if (child != nullptr) {
-      action(child.get());
-      Traverse(child.get(), action);
-    }
-  }
-}
-
-template <typename Mapper, std::size_t Fanout>
 constexpr void Automaton<Mapper, Fanout>::Initialize() {
   // Build suffix link: from each node to the node that is the longest
   // possible strict suffix of it in the graph.
@@ -176,6 +134,48 @@ constexpr void Automaton<Mapper, Fanout>::Initialize() {
       temp = recur;
     }
   });  
+}
+
+template <typename Mapper, std::size_t Fanout>
+/*static*/ constexpr void Automaton<Mapper, Fanout>::Insert(Node* node,
+                                                 std::string_view word) {
+  if (word.empty()) {
+    node->in_dict = true;
+    return;
+  }
+  std::size_t index = Mapper{}(word.front());
+  auto& entry = node->next[index];
+  if (entry == nullptr) {
+    entry = std::make_unique<Node>(node->depth + 1, index, node);
+  }
+  Insert(entry.get(), word.substr(1));
+}
+
+template <typename Mapper, std::size_t Fanout>
+/*static*/ constexpr void Automaton<Mapper, Fanout>::Traverse(
+    Node* node, std::function<void(Node* const)> action) {
+  for (auto& child : node->next) {
+    if (child != nullptr) {
+      action(child.get());
+      Traverse(child.get(), action);
+    }
+  }
+}
+
+template <typename Mapper, std::size_t Fanout>
+/*static*/ constexpr void Automaton<Mapper, Fanout>::CollectMatches(
+    Node* node, std::size_t end_at, std::vector<Hit>* hits) const {
+  if (node->in_dict) {
+    hits->emplace_back(end_at - node->depth, node->depth);
+  }
+  // Collect dict suffix matches.
+  while (true) {
+    node = node->dict_suffix;
+    if (node == nullptr) {
+      break;
+    }
+    hits->emplace_back(end_at - node->depth, node->depth);
+  }
 }
 
 struct Mapper {
