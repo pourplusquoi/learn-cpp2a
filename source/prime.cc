@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <map>
 #include <unordered_map>
@@ -8,7 +9,7 @@
 namespace prime {
 namespace {
 
-using int64 = long long;
+using int64 = std::int64_t;
 
 static std::map<int64, int64> prevp;
 static std::unordered_map<int64,
