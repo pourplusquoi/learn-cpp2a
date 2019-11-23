@@ -52,7 +52,7 @@ class Automaton : public Matcher {
   constexpr static void Traverse(Node* node,
                                  std::function<void(Node* const)> action);
   constexpr static void CollectMatches(Node* node, std::size_t end_at,
-                                       std::vector<Hit>* hits) const;
+                                       std::vector<Hit>* hits);
 
   std::unique_ptr<Node> root_;
 };
@@ -164,7 +164,7 @@ template <typename Mapper, std::size_t Fanout>
 
 template <typename Mapper, std::size_t Fanout>
 /*static*/ constexpr void Automaton<Mapper, Fanout>::CollectMatches(
-    Node* node, std::size_t end_at, std::vector<Hit>* hits) const {
+    Node* node, std::size_t end_at, std::vector<Hit>* hits) {
   if (node->in_dict) {
     hits->emplace_back(end_at - node->depth, node->depth);
   }
