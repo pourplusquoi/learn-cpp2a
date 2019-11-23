@@ -42,11 +42,11 @@ class Automaton : public Matcher {
     std::array<std::unique_ptr<Node>, Fanout> next;
 
     constexpr Node(std::size_t depth, std::size_t index,
-                   Node* parent = nullptr) : 
-        in_dict(false), depth(depth), index(index), parent(parent) {}
+                   Node* parent = nullptr)
+        : in_dict(false), depth(depth), index(index), parent(parent) {}
   };
 
-  constexpr void Initialize();
+  constexpr void Init();
 
   constexpr static void Insert(Node* node, std::string_view word);
   constexpr static void Traverse(Node* node,
@@ -65,7 +65,7 @@ constexpr Automaton<Mapper, Fanout>::Automaton(
     Insert(root_.get(), word);
   }
   // Build extra lookup links.
-  Initialize();
+  Init();
 }
 
 template <typename Mapper, std::size_t Fanout>
@@ -95,7 +95,7 @@ std::vector<Hit> Automaton<Mapper, Fanout>::Match(
 }
 
 template <typename Mapper, std::size_t Fanout>
-constexpr void Automaton<Mapper, Fanout>::Initialize() {
+constexpr void Automaton<Mapper, Fanout>::Init() {
   // Build suffix link: from each node to the node that is the longest
   // possible strict suffix of it in the graph.
   Traverse(root_.get(), [&](Node* const node) {
@@ -137,8 +137,8 @@ constexpr void Automaton<Mapper, Fanout>::Initialize() {
 }
 
 template <typename Mapper, std::size_t Fanout>
-/*static*/ constexpr void Automaton<Mapper, Fanout>::Insert(Node* node,
-                                                 std::string_view word) {
+/*static*/ constexpr void Automaton<Mapper, Fanout>::Insert(
+    Node* node, std::string_view word) {
   if (word.empty()) {
     node->in_dict = true;
     return;
