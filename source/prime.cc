@@ -158,7 +158,7 @@ int64_t prime_num_upto(const int64_t n) noexcept {
 }  // namespace prime
 
 int main() {
-  std::cout << prime::prime_sum_upto(1'000'000'000llu) << std::endl;
-  std::cout << prime::prime_num_upto(1'000'000'000llu) << std::endl;
-  return 0;
+    std::cout << prime::prime_sum_upto(1'000'000'000ll) << std::endl;
+    std::cout << prime::prime_num_upto(1'000'000'000ll) << std::endl;
+    return 0;
 }
