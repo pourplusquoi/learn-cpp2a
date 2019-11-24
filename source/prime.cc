@@ -38,7 +38,7 @@ inline int64_t Sqrt(const int64_t n) noexcept {
 }
 
 constexpr int64_t QuickPower(int64_t base, int64_t power,
-                            const int64_t mod) noexcept {
+                             const int64_t mod) noexcept {
   int64_t res = 1;
   while (power > 0) {
     if (power & 1) {
@@ -166,7 +166,7 @@ int64_t Prime::PreviousPrime(int64_t n) noexcept {
 }
 
 int main() {
-    std::cout << Prime::SumUpto(1'000'000'000ll) << std::endl;
-    std::cout << Prime::NumUpto(1'000'000'000ll) << std::endl;
-    return 0;
+  std::cout << Prime::SumUpto(1'000'000'000ll) << std::endl;
+  std::cout << Prime::NumUpto(1'000'000'000ll) << std::endl;
+  return 0;
 }
