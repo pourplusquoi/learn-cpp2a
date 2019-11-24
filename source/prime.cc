@@ -11,8 +11,8 @@ class Prime {
   static int64_t NumUpto(const int64_t n) noexcept;
 
  private:
- // Calculates the sum of the list $[2..n]$ after filtering out composite
-  // numbers using all the primes ${p' | p' <= p}$.
+  // Calculates the sum of primes in the list $[2..n]$ after filtering out 
+  // composite numbers using all the primes ${p' | p' <= p}$.
   static int64_t PrimeSum(const int64_t n, int64_t p) noexcept;
 
   // Calculates the # of primes in the list $[2..n]$ after filtering out
@@ -147,8 +147,6 @@ int64_t Prime::PrimeNum(const int64_t n, int64_t p) noexcept {
   }
 }
 
-// Get the prime number $p$ s.t. $p <= n$ and there is no prime $p'$
-// satisfying $p < p' <= n$.
 int64_t Prime::PreviousPrime(int64_t n) noexcept {
   if (n > 2 && n % 2 == 0) {
     n--;
