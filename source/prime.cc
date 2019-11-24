@@ -19,7 +19,7 @@ class Prime {
   // composite numbers using all the primes ${p' | p' <= p}$.
   static int64_t PrimeNum(const int64_t n, int64_t p) noexcept;
 
-  // Get the prime number $p$ s.t. $p <= n$ and there is no prime $p'$
+  // Gets the prime number $p$ s.t. $p <= n$ and there is no prime $p'$
   // satisfying $p < p' <= n$.
   static int64_t PreviousPrime(int64_t n) noexcept;
 
@@ -27,9 +27,9 @@ class Prime {
       std::unordered_map<
           int64_t, std::unordered_map<int64_t, int64_t>>;
 
-  static std::map<int64_t, int64_t> previous_prime_;
-  static Memoization dp_sum_;
-  static Memoization dp_num_;
+  static inline std::map<int64_t, int64_t> previous_prime_;
+  static inline Memoization dp_sum_;
+  static inline Memoization dp_num_;
 };
 
 namespace {
@@ -80,11 +80,6 @@ constexpr bool IsPrime(const int64_t n) noexcept {
   return true;
 }
 }  // namespace
-
-std::map<int64_t, int64_t> Prime::previous_prime_;
-
-Prime::Memoization Prime::dp_sum_;
-Prime::Memoization Prime::dp_num_;
 
 int64_t Prime::SumUpto(const int64_t n) noexcept {
   return PrimeSum(n, Sqrt(n));
