@@ -1,29 +1,29 @@
 #include <iostream>
+#include <utility>
 #include <vector>
 
 template <typename Type, typename Comparator>
 struct Eq {
   bool operator()(Type&& self, Type&& other) const {
-    return !Comparator{}(
-        std::forward<Type>(self), std::forward<Type>(other)) &&
-            !Comparator{}(
-                std::forward<Type>(other), std::forward<Type>(self));
+    Comparator cmp;
+    return cmp(std::forward<Type>(self), std::forward<Type>(other)) &&
+        cmp(std::forward<Type>(other), std::forward<Type>(self));
   }
 };
 
 template <typename Type, typename Comparator>
 struct Lt {
   bool operator()(Type&& self, Type&& other) const {
-    return Comparator{}(std::forward<Type>(self),
-                        std::forward<Type>(other));
+    Comparator cmp;
+    return cmp(std::forward<Type>(self), std::forward<Type>(other));
   }
 };
 
 template <typename Type, typename Comparator>
 struct Gt {
   bool operator()(Type&& self, Type&& other) const {
-    return Comparator{}(std::forward<Type>(other),
-                        std::forward<Type>(self));
+    Comparator cmp;
+    return cmp(std::forward<Type>(other), std::forward<Type>(self));
   }
 };
 
