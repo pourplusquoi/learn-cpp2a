@@ -4,7 +4,6 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -18,16 +17,29 @@ class Matcher {
  public:
   constexpr Matcher() = default;
   virtual ~Matcher() = default;
-  virtual std::vector<Hit> Match(std::string_view text) const = 0;
+  virtual std::vector<Hit> Match(std::string_view text) const noexcept = 0;
 };
 
 template <typename Mapper, std::size_t Fanout>
 class Automaton : public Matcher {
  public:
-  constexpr explicit Automaton(const std::vector<std::string>& dict);
+  template <typename Container>
+  constexpr explicit Automaton(Container&& dict) noexcept {
+    using ElemT = decltype(*std::declval<Container>().begin());
+    static_assert(std::is_convertible_v<ElemT, std::string_view>,
+                  "Cannot convert element to std::string_view");
+
+    root_ = std::make_unique<Node>(0, 0);
+    for (std::string_view word : dict) {
+      Insert(root_.get(), word);
+    }
+    // Build extra lookup links.
+    Init();
+  }
+
   ~Automaton() override = default;
 
-  std::vector<Hit> Match(std::string_view text) const override;
+  std::vector<Hit> Match(std::string_view text) const noexcept override;
 
  private:
   struct Node {
@@ -42,35 +54,25 @@ class Automaton : public Matcher {
     std::array<std::unique_ptr<Node>, Fanout> next;
 
     constexpr Node(std::size_t depth, std::size_t index,
-                   Node* parent = nullptr)
-        : in_dict(false), depth(depth), index(index), parent(parent) {}
+                   Node* parent = nullptr) noexcept
+        : in_dict(false), depth(depth), parent(parent), index(index),
+          suffix(nullptr), dict_suffix(nullptr) {}
   };
 
-  constexpr void Init();
+  constexpr void Init() noexcept;
 
-  constexpr static void Insert(Node* node, std::string_view word);
-  constexpr static void Traverse(Node* node,
-                                 std::function<void(Node* const)> action);
+  constexpr static void Insert(Node* node, std::string_view word) noexcept;
+  constexpr static void Traverse(
+      Node* node, std::function<void(Node* const)> action) noexcept;
   constexpr static void CollectMatches(const Node* node, std::size_t end_at,
-                                       std::vector<Hit>* hits);
+                                       std::vector<Hit>* hits) noexcept;
 
   std::unique_ptr<Node> root_;
 };
 
 template <typename Mapper, std::size_t Fanout>
-constexpr Automaton<Mapper, Fanout>::Automaton(
-    const std::vector<std::string>& dict) {
-  root_ = std::make_unique<Node>(0, 0);
-  for (std::string_view word : dict) {
-    Insert(root_.get(), word);
-  }
-  // Build extra lookup links.
-  Init();
-}
-
-template <typename Mapper, std::size_t Fanout>
 std::vector<Hit> Automaton<Mapper, Fanout>::Match(
-    std::string_view text) const {
+    std::string_view text) const noexcept {
   std::vector<Hit> hits;
   const Node* cursor = root_.get();
   for (std::size_t i = 0; i < text.size(); i++) {
@@ -95,7 +97,7 @@ std::vector<Hit> Automaton<Mapper, Fanout>::Match(
 }
 
 template <typename Mapper, std::size_t Fanout>
-constexpr void Automaton<Mapper, Fanout>::Init() {
+constexpr void Automaton<Mapper, Fanout>::Init() noexcept {
   // Build suffix link: from each node to the node that is the longest
   // possible strict suffix of it in the graph.
   Traverse(root_.get(), [root = root_.get()](Node* const node) {
@@ -138,7 +140,7 @@ constexpr void Automaton<Mapper, Fanout>::Init() {
 
 template <typename Mapper, std::size_t Fanout>
 /*static*/ constexpr void Automaton<Mapper, Fanout>::Insert(
-    Node* node, std::string_view word) {
+    Node* node, std::string_view word) noexcept {
   if (word.empty()) {
     node->in_dict = true;
     return;
@@ -152,18 +154,18 @@ template <typename Mapper, std::size_t Fanout>
 
 template <typename Mapper, std::size_t Fanout>
 /*static*/ constexpr void Automaton<Mapper, Fanout>::Traverse(
-    Node* node, std::function<void(Node* const)> action) {
-  for (auto it = node->next.begin(); it != node->next.end(); ++it) {
-    if (*it != nullptr) {
-      action(it->get());
-      Traverse(it->get(), action);
+    Node* node, std::function<void(Node* const)> action) noexcept {
+  for (auto& entry : node->next) {
+    if (entry != nullptr) {
+      action(entry.get());
+      Traverse(entry.get(), action);
     }
   }
 }
 
 template <typename Mapper, std::size_t Fanout>
 /*static*/ constexpr void Automaton<Mapper, Fanout>::CollectMatches(
-    const Node* node, std::size_t end_at, std::vector<Hit>* hits) {
+    const Node* node, std::size_t end_at, std::vector<Hit>* hits) noexcept {
   if (node->in_dict) {
     hits->emplace_back(end_at - node->depth, node->depth);
   }
@@ -184,10 +186,8 @@ struct Mapper {
 };
 
 int main() {
-  for (int i=0; i < 100000; i++) {
-    std::cout << i << std::endl;
-  std::vector<std::string> dict{"a", "ab", "bab", "bc",
-                                "bca", "c", "caa"};
+  constexpr std::array<std::string_view, 7> dict{
+    "a", "ab", "bab", "bc", "bca", "c", "caa"};
   constexpr std::string_view text = "abccab";
 
   std::cout << "Constructing automaton" << std::endl;
@@ -208,7 +208,7 @@ int main() {
       std::cout << "@" << begin_at << " ";
     }
     std::cout << "\n";
-  }}
+  }
 
   return 0;
 }
