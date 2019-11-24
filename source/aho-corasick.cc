@@ -2,10 +2,10 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -24,7 +24,7 @@ class Matcher {
 template <typename Mapper, std::size_t Fanout>
 class Automaton : public Matcher {
  public:
-  constexpr explicit Automaton(const std::vector<std::string_view>& dict);
+  constexpr explicit Automaton(const std::vector<std::string>& dict);
   ~Automaton() override = default;
 
   std::vector<Hit> Match(std::string_view text) const override;
@@ -51,7 +51,7 @@ class Automaton : public Matcher {
   constexpr static void Insert(Node* node, std::string_view word);
   constexpr static void Traverse(Node* node,
                                  std::function<void(Node* const)> action);
-  constexpr static void CollectMatches(Node* node, std::size_t end_at,
+  constexpr static void CollectMatches(const Node* node, std::size_t end_at,
                                        std::vector<Hit>* hits);
 
   std::unique_ptr<Node> root_;
@@ -59,7 +59,7 @@ class Automaton : public Matcher {
 
 template <typename Mapper, std::size_t Fanout>
 constexpr Automaton<Mapper, Fanout>::Automaton(
-    const std::vector<std::string_view>& dict) {
+    const std::vector<std::string>& dict) {
   root_ = std::make_unique<Node>(0, 0);
   for (std::string_view word : dict) {
     Insert(root_.get(), word);
@@ -72,15 +72,15 @@ template <typename Mapper, std::size_t Fanout>
 std::vector<Hit> Automaton<Mapper, Fanout>::Match(
     std::string_view text) const {
   std::vector<Hit> hits;
-  Node* cursor = root_.get();
+  const Node* cursor = root_.get();
   for (std::size_t i = 0; i < text.size(); i++) {
     std::size_t index = Mapper{}(text[i]);
-    Node* temp = cursor;
+    const Node* temp = cursor;
     while (temp != nullptr) {
-      const auto& entry = temp->next[index];
+      const auto* entry = temp->next[index].get();
       if (entry != nullptr) {  // Found match.
-        CollectMatches(entry.get(), i + 1, &hits);
-        cursor = entry.get();
+        CollectMatches(entry, i + 1, &hits);
+        cursor = entry;
         break;
       } else {  // No match found.
         temp = temp->suffix;
@@ -98,21 +98,21 @@ template <typename Mapper, std::size_t Fanout>
 constexpr void Automaton<Mapper, Fanout>::Init() {
   // Build suffix link: from each node to the node that is the longest
   // possible strict suffix of it in the graph.
-  Traverse(root_.get(), [&](Node* const node) {
+  Traverse(root_.get(), [root = root_.get()](Node* const node) {
     Node* temp = node->parent;
-    if (temp == root_.get()) {
-      node->suffix = root_.get();
+    if (temp == root) {
+      node->suffix = root;
       return;
     }
     while (true) {
       temp = temp->suffix;
       if (temp == nullptr) {
-        node->suffix = root_.get();
+        node->suffix = root;
         return;  // Reached root.
       }
-      const auto& entry = temp->next[node->index];
+      auto* entry = temp->next[node->index].get();
       if (entry != nullptr) {
-        node->suffix = entry.get();
+        node->suffix = entry;
         return;
       }
     }
@@ -120,7 +120,7 @@ constexpr void Automaton<Mapper, Fanout>::Init() {
 
   // Build dict_suffix link: from each node to the next node in the
   // dictionary that can be reached by following suffix links.
-  Traverse(root_.get(), [&](Node* const node) {
+  Traverse(root_.get(), [](Node* const node) {
     Node* temp = node;
     while (true) {
       Node* recur = temp->suffix;
@@ -144,27 +144,26 @@ template <typename Mapper, std::size_t Fanout>
     return;
   }
   std::size_t index = Mapper{}(word.front());
-  auto& entry = node->next[index];
-  if (entry == nullptr) {
-    entry = std::make_unique<Node>(node->depth + 1, index, node);
+  if (node->next[index] == nullptr) {
+    node->next[index] = std::make_unique<Node>(node->depth + 1, index, node);
   }
-  Insert(entry.get(), word.substr(1));
+  Insert(node->next[index].get(), word.substr(1));
 }
 
 template <typename Mapper, std::size_t Fanout>
 /*static*/ constexpr void Automaton<Mapper, Fanout>::Traverse(
     Node* node, std::function<void(Node* const)> action) {
-  for (auto& child : node->next) {
-    if (child != nullptr) {
-      action(child.get());
-      Traverse(child.get(), action);
+  for (auto it = node->next.begin(); it != node->next.end(); ++it) {
+    if (*it != nullptr) {
+      action(it->get());
+      Traverse(it->get(), action);
     }
   }
 }
 
 template <typename Mapper, std::size_t Fanout>
 /*static*/ constexpr void Automaton<Mapper, Fanout>::CollectMatches(
-    Node* node, std::size_t end_at, std::vector<Hit>* hits) {
+    const Node* node, std::size_t end_at, std::vector<Hit>* hits) {
   if (node->in_dict) {
     hits->emplace_back(end_at - node->depth, node->depth);
   }
@@ -185,28 +184,31 @@ struct Mapper {
 };
 
 int main() {
+  for (int i=0; i < 100000; i++) {
+    std::cout << i << std::endl;
+  std::vector<std::string> dict{"a", "ab", "bab", "bc",
+                                "bca", "c", "caa"};
+  constexpr std::string_view text = "abccab";
+
+  std::cout << "Constructing automaton" << std::endl;
   std::unique_ptr<Matcher> matcher =
-      std::make_unique<Automaton<Mapper, 256>>(
-          std::vector<std::string_view>{"a", "ab", "bab", "bc",
-                                        "bca", "c", "caa"});
-  
-  constexpr std::string_view text("abccab");
+      std::make_unique<Automaton<Mapper, 256>>(dict);
+
   std::cout << "Scanning text: " << text << std::endl;
   std::vector<Hit> hits = matcher->Match(text);
 
-  std::unordered_map<std::string_view, std::vector<BeginAt>> stats;
-  std::cout << "\n";
+  std::cout << "Found " << hits.size() << " hit(s) in total in '" << text << "'." << std::endl;
+  std::map<std::string_view, std::vector<BeginAt>> stats;
   for (const Hit& hit : hits) {
     stats[text.substr(hit.first, hit.second)].emplace_back(hit.first);
   }
   for (const auto& entry : stats) {
-    std::cout << "Found occurrance(s) of '" << entry.first << "':";
+    std::cout << "Found occurrance(s) of '" << entry.first << "': ";
     for (BeginAt begin_at : entry.second) {
-      std::cout << " @" << begin_at;
+      std::cout << "@" << begin_at << " ";
     }
-    std::cout << "\n\n";
-  }
-  std::cout << std::endl;
+    std::cout << "\n";
+  }}
 
   return 0;
 }
