@@ -187,7 +187,7 @@ struct Mapper {
 
 int main() {
   constexpr std::array<std::string_view, 7> dict{
-    "a", "ab", "bab", "bc", "bca", "c", "caa"};
+      "a", "ab", "bab", "bc", "bca", "c", "caa"};
   constexpr std::string_view text = "abccab";
 
   std::cout << "Constructing automaton" << std::endl;
