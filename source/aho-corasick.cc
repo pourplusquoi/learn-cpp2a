@@ -15,8 +15,8 @@ using Hit = std::pair<BeginAt, Length>;
 
 class Matcher {
  public:
-  constexpr Matcher() = default;
-  virtual ~Matcher() = default;
+  constexpr Matcher() noexcept = default;
+  virtual ~Matcher() noexcept = default;
   virtual std::vector<Hit> Match(std::string_view text) const noexcept = 0;
 };
 
@@ -37,7 +37,7 @@ class Automaton : public Matcher {
     Init();
   }
 
-  ~Automaton() override = default;
+  ~Automaton() noexcept override = default;
 
   std::vector<Hit> Match(std::string_view text) const noexcept override;
 
