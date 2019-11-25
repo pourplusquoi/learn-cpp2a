@@ -126,20 +126,20 @@ auto quick_sort = MakeCombinator(
 
 template <typename RandomIt, typename URBG>
 auto random_shuffle = MakeCombinator(
-  [](auto sub, RandomIt first, RandomIt last, URBG&& g) {
-    if (first >= last) {
-      return;
-    }
+    [](auto sub, RandomIt first, RandomIt last, URBG&& g) {
+      if (first >= last) {
+        return;
+      }
 
-    using Distr =
-        std::uniform_int_distribution<
-            typename std::iterator_traits<RandomIt>::difference_type>;
-    using Param = typename Distr::param_type;
+      using Distr =
+          std::uniform_int_distribution<
+              typename std::iterator_traits<RandomIt>::difference_type>;
+      using Param = typename Distr::param_type;
 
-    Distr distr;
-    std::swap(*first, *(first + distr(g, Param(0, last - first - 1))));
-    sub(first + 1, last, std::forward<URBG>(g));
-  });
+      Distr distr;
+      std::swap(*first, *(first + distr(g, Param(0, last - first - 1))));
+      sub(first + 1, last, std::forward<URBG>(g));
+    });
 
 int main() {
   constexpr int size = 64;
