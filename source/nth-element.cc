@@ -6,8 +6,8 @@ template <typename Type, typename Comparator>
 struct Eq {
   bool operator()(Type&& self, Type&& other) const {
     Comparator cmp;
-    return cmp(std::forward<Type>(self), std::forward<Type>(other)) &&
-        cmp(std::forward<Type>(other), std::forward<Type>(self));
+    return !cmp(std::forward<Type>(self), std::forward<Type>(other)) &&
+        !cmp(std::forward<Type>(other), std::forward<Type>(self));
   }
 };
 
@@ -28,15 +28,15 @@ struct Gt {
 };
 
 template <typename RandomIt>
-struct Value {
+struct ElemValue {
   using Type = decltype(*std::declval<RandomIt>());
 };
 
 template <typename RandomIt>
-using ValueType = typename Value<RandomIt>::Type;
+using ElemValueType = typename ElemValue<RandomIt>::Type;
 
 template <typename RandomIt, typename Comparator>
-inline RandomIt median(RandomIt a, RandomIt b, RandomIt c) {
+inline RandomIt Median(RandomIt a, RandomIt b, RandomIt c) {
   Comparator cmp;
   if (cmp(*b, *a)) {
     std::swap(a, b);
@@ -50,20 +50,20 @@ inline RandomIt median(RandomIt a, RandomIt b, RandomIt c) {
   return a;
 }
 
-template <typename RandomIt, typename Comparator = std::less<ValueType<RandomIt>>>
-void nth_elem(RandomIt first, RandomIt nth, RandomIt last) {
-  RandomIt lo = first, hi = last - 1;
-  if (lo >= hi || lo > nth || nth > hi) {
+template <typename RandomIt,
+          typename Comparator = std::less<ElemValueType<RandomIt>>>
+void NthElement(RandomIt first, RandomIt nth, RandomIt last) {
+  if (last - first <= 1 || nth < first || last <= nth) {
     return;
   }
 
-  using Type = ValueType<RandomIt>;
+  using Type = ElemValueType<RandomIt>;
   Eq<Type, Comparator> eq;
   Lt<Type, Comparator> lt;
   Gt<Type, Comparator> gt;
 
-  RandomIt mid = lo + (hi - lo) / 2;
-  RandomIt med = median<RandomIt, Comparator>(lo, mid, hi);
+  RandomIt lo = first, hi = last - 1, mid = lo + (hi - lo) / 2;
+  RandomIt med = Median<RandomIt, Comparator>(lo, mid, hi);
 
   auto pivot = *med;
   if (lo != med) {
@@ -89,9 +89,9 @@ void nth_elem(RandomIt first, RandomIt nth, RandomIt last) {
   }
 
   if (nth < hd) {
-    nth_elem(first, nth, hd);
+    NthElement(first, nth, hd);
   } else if (lo <= nth) {
-    nth_elem(lo, nth, last);
+    NthElement(lo, nth, last);
   }
 }
 
@@ -100,9 +100,9 @@ int main() {
   std::vector<int> v{6,4,7,2,3,8,0,9,5,1};
   std::vector<int> w{6,6,6,6,6,6,6,6,6,6};
   for (int i = 0; i < 10; i++) {
-    nth_elem(u.begin(), u.begin() + i, u.end());
-    nth_elem(v.begin(), v.begin() + i, v.end());
-    nth_elem(w.begin(), w.begin() + i, w.end());
+    NthElement(u.begin(), u.begin() + i, u.end());
+    NthElement(v.begin(), v.begin() + i, v.end());
+    NthElement(w.begin(), w.begin() + i, w.end());
     std::cout << "The " << i + 1
           << "th element for {u, v, w} are: {"
           << *(u.begin() + i) << ", "
