@@ -224,7 +224,6 @@ int main() {
   std::cout << "Scanning text: " << text << std::endl;
   std::vector<Hit> hits = matcher->Match(text);
 
-
   std::cout << "Found " << hits.size() << " hit(s) in total in '" << text << "'." << std::endl;
   std::map<std::string_view, std::vector<BeginAt>> stats;
   for (const Hit& hit : hits) {
