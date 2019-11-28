@@ -35,7 +35,7 @@ auto sq_root = MakeCombinator(
     });
 
 template <typename RandomIt, typename Comparator>
-inline RandomIt median(RandomIt a, RandomIt b, RandomIt c) {
+inline RandomIt Median(RandomIt a, RandomIt b, RandomIt c) {
   Comparator cmp;
   if (cmp(*b, *a)) {
     std::swap(a, b);
@@ -58,7 +58,7 @@ auto nth_element = MakeCombinator(
 
       Comparator cmp;
       RandomIt lo = first, hi = last - 1, mid = lo + (hi - lo) / 2;
-      RandomIt med = median<RandomIt, Comparator>(lo, mid, hi);
+      RandomIt med = Median<RandomIt, Comparator>(lo, mid, hi);
       
       auto pivot = *med;
       if (lo != med) {
@@ -97,7 +97,7 @@ auto quick_sort = MakeCombinator(
 
       Comparator cmp;
       RandomIt lo = first, hi = last - 1, mid = lo + (hi - lo) / 2;
-      RandomIt med = median<RandomIt, Comparator>(lo, mid, hi);
+      RandomIt med = Median<RandomIt, Comparator>(lo, mid, hi);
 
       auto pivot = *med;
       if (lo != med) {
