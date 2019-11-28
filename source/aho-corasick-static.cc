@@ -13,19 +13,24 @@ using Length = uint64_t;
 
 using Hit = std::pair<BeginAt, Length>;
 
+template <typename Impl>
 class Matcher {
  public:
   constexpr Matcher() noexcept = default;
   virtual ~Matcher() noexcept = default;
-  [[nodiscard]] virtual std::vector<Hit> Match(
-      std::string_view text) const noexcept = 0;
+  [[nodiscard]] std::vector<Hit> Match(std::string_view text) const noexcept;
   // [[nodiscard]] std::string Dump() const noexcept = 0;
   // [[nodiscard]] static std::unique_ptr<Matcher> New(
   //     std::string_view dumped) noexcept;
 };
 
+template <typename Impl>
+std::vector<Hit> Matcher<Impl>::Match(std::string_view text) const noexcept {
+  return static_cast<const Impl*>(this)->Match(text);
+}
+
 template <typename Mapper, uint64_t Fanout>
-class Automaton : public Matcher {
+class Automaton : public Matcher<Automaton<Mapper, Fanout>> {
  public:
   template <typename Container>
   constexpr explicit Automaton(Container&& dict) noexcept {
@@ -47,8 +52,7 @@ class Automaton : public Matcher {
   Automaton(const Automaton&) = delete;
   Automaton& operator=(const Automaton&) = delete;
 
-  [[nodiscard]] std::vector<Hit> Match(
-      std::string_view text) const noexcept override;
+  [[nodiscard]] std::vector<Hit> Match(std::string_view text) const noexcept;
 
  private:
   struct Node {
@@ -204,7 +208,7 @@ struct Mapper {
 };
 
 template <typename Impl, typename Container>
-[[nodiscard]] std::unique_ptr<Matcher> NewMatcher(
+[[nodiscard]] std::unique_ptr<Matcher<Impl>> NewMatcher(
     const Container& dict) {
   return std::make_unique<Impl>(dict);
 }
@@ -215,10 +219,11 @@ int main() {
   constexpr std::string_view text = "abccab";
 
   std::cout << "Constructing automaton" << std::endl;
-  std::unique_ptr<Matcher> matcher = NewMatcher<Automaton<Mapper, 256>>(dict);
+  auto matcher = NewMatcher<Automaton<Mapper, 256>>(dict);
 
   std::cout << "Scanning text: " << text << std::endl;
   std::vector<Hit> hits = matcher->Match(text);
+
 
   std::cout << "Found " << hits.size() << " hit(s) in total in '" << text << "'." << std::endl;
   std::map<std::string_view, std::vector<BeginAt>> stats;
