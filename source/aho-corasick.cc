@@ -1,5 +1,6 @@
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -53,6 +54,7 @@ class Automaton : public Matcher {
   [[nodiscard]] std::string Serialize() const noexcept override;
   [[nodiscard]] std::string ToString() const noexcept override;
 
+  // Creates an |Automaton| instance from a serialized string.
   [[nodiscard]] static std::unique_ptr<Automaton> New(
       std::string_view serialized) noexcept;
 
@@ -98,12 +100,12 @@ class Automaton : public Matcher {
   static constexpr void CollectMatches(const Node* node, uint64_t end_at,
                                        std::vector<Hit>* hits) noexcept;
 
-  // ...
+  // Serializes the given |node| and its children nodes recursively.
   static void Serialize(
       const Node* node, const std::unordered_map<const Node*, int64_t>& ids,
       std::string* serialized, char buffer[]) noexcept;
 
-  // ...
+  // Converts the given |node| and its children nodes to string recursively.
   static void ToString(
       const Node* node, const std::unordered_map<const Node*, int64_t>& ids,
       std::string* human_readable) noexcept;
@@ -403,36 +405,57 @@ template <typename Mapper, uint64_t Fanout>
 /*static*/ void Automaton<Mapper, Fanout>::ToString(
     const Node* node, const std::unordered_map<const Node*, int64_t>& ids,
     std::string* human_readable) noexcept {
-  std::string& str = *human_readable;
-  str += "{\n  id: ";
-  str += std::to_string(ids.at(node)) + ",\n  in_dict: ";
-  str += std::string(node->in_dict ? "YES" : "NO") + ",\n  depth: ";
-  str += std::to_string(node->depth) + ",\n  index: ";
-  str += std::to_string(node->index) + ",\n  parent: id=";
-  str += std::to_string(ids.at(node->parent)) + ",\n  suffix: id=";
-  str += std::to_string(ids.at(node->suffix)) + ",\n  dict_suffix: id=";
-  str += std::to_string(ids.at(node->dict_suffix)) + ",\n  next: [\n";
+  constexpr char format[] = "{\n"
+                            "  id: %lld,\n"
+                            "  in_dict: %s,\n"
+                            "  depth: %llu,\n"
+                            "  index: %llu,\n"
+                            "  parent: id=%lld,\n"
+                            "  suffix: id=%lld,\n"
+                            "  dict_suffix: id=%lld,\n"
+                            "  next: [%s],\n"
+                            "},\n";
+  constexpr char fmt[] = "\n    index=%llu: id=%lld,";
 
+  const char* in_dict = node->in_dict ? "YES" : "NO";
+  const auto& self = ids.at(node);
+  const auto& parent = ids.at(node->parent);
+  const auto& suffix = ids.at(node->suffix);
+  const auto& dict_suffix = ids.at(node->dict_suffix);
+
+  std::string s;
   for (uint64_t i = 0; i < Fanout; i++) {
-    const auto& child = node->next[i];
-    if (child == nullptr) {
+    const auto& current = node->next[i];
+    if (current == nullptr) {
       continue;
     }
-    str += std::string("    index=") + std::to_string(i) +
-        ": id=" + std::to_string(ids.at(child.get())) + ",\n";
-  }
-  if (str.substr(str.size() - 2) == "[\n") {
-    str.pop_back();
-  } else {
-    str += "  ";
-  }
-  str += "],\n},\n";
+    const auto& next = ids.at(current.get());
 
-  for (const auto& child : node->next) {
-    if (child == nullptr) {
+    int n = std::snprintf(nullptr, 0, fmt, i, next);
+    char buf[n + 1];
+    std::snprintf(buf, sizeof(buf), fmt, i, next);
+    s += std::string_view(buf, n);
+  }
+  if (!s.empty()) {
+    s += "\n  ";
+  }
+
+  const char* schar = s.c_str();
+  int nbytes = std::snprintf(nullptr, 0, format,
+                             self, in_dict, node->depth, node->index,
+                             parent, suffix, dict_suffix, schar);
+  char buffer[nbytes + 1];
+  std::snprintf(buffer, sizeof(buffer), format,
+                self, in_dict, node->depth, node->index,
+                parent, suffix, dict_suffix, schar);
+  (*human_readable) += std::string_view(buffer, nbytes);
+
+  for (const auto& current : node->next) {
+    if (current == nullptr) {
       continue;
     }
-    ToString(child.get(), ids, human_readable);
+    // Recursively build the human readable string.
+    ToString(current.get(), ids, human_readable);
   }
 }
 
@@ -471,6 +494,8 @@ int main() {
     }
     std::cout << "\n";
   }
+
+  std::cout << matcher->ToString() << std::endl;
 
   return 0;
 }
