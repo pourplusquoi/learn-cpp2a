@@ -238,7 +238,7 @@ Automaton<Mapper, Fanout>::New(std::string_view serialized) noexcept {
   }
 
   for (Node* node : nodes) {
-    assert(to_links.find(node) != to_links.end());
+    // assert(to_links.find(node) != to_links.end());
     const Links& links = to_links[node];
     node->suffix =
         (links.suffix_id == -1) ? nullptr : nodes[links.suffix_id];
