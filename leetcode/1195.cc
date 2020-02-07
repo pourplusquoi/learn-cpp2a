@@ -40,7 +40,7 @@ public:
     }
 
     // printFizzBuzz() outputs "fizzbuzz".
-  void fizzbuzz(function<void()> printFizzBuzz) {
+    void fizzbuzz(function<void()> printFizzBuzz) {
         while (true) {
             std::unique_lock<std::mutex> lock(mut);
             if (m > n) break;
