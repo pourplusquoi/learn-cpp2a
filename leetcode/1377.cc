@@ -1,10 +1,10 @@
 class Solution {
 public:
   double frogPosition(int n, vector<vector<int>>& edges, int t, int target) {
-    vector<unordered_set<int>> graph(n + 1);
+    vector<vector<int>> graph(n + 1);
     for (const auto& e : edges) {
-      graph[e[0]].emplace(e[1]);
-      graph[e[1]].emplace(e[0]);
+      graph[e[0]].emplace_back(e[1]);
+      graph[e[1]].emplace_back(e[0]);
     }
     double res = 0.0;
     unordered_set<int> visited;
@@ -13,7 +13,7 @@ public:
     return res;
   }
   
-  void dfs(const vector<unordered_set<int>>& graph,
+  void dfs(const vector<vector<int>>& graph,
            unordered_set<int>& visited,
            int cur, int tar, int t, double p, double& res) {
     if (t == 0) {
