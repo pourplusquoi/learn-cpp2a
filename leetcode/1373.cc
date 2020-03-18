@@ -33,7 +33,7 @@ public:
       };
     auto lhs = traverse(node->left);
     auto rhs = traverse(node->right);
-    if (valid(node, lhs, rhs)) {
+    if (is_valid(node, lhs, rhs)) {
       int total = node->val + lhs.total + rhs.total;
       return Result {
           .is_bst = true,
@@ -53,7 +53,7 @@ public:
     }
   }
   
-  inline constexpr bool valid(TreeNode* node,
+  inline constexpr bool is_valid(TreeNode* node,
                               const Result& lhs,
                               const Result& rhs) {
     return lhs.is_bst && rhs.is_bst
