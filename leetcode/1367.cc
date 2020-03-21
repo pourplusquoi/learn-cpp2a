@@ -15,6 +15,26 @@
  *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
  * };
  */
+class Solution {
+public:
+  bool isSubPath(ListNode* head, TreeNode* root) {
+    if (head == nullptr)
+      return true;
+    if (root == nullptr)
+      return false;
+    return dfs(head, root)
+        || isSubPath(head, root->left) || isSubPath(head, root->right);
+  }
+  
+  bool dfs(ListNode* head, TreeNode* root) {
+    if (head == nullptr)
+      return true;
+    if (root == nullptr)
+      return false;
+    return head->val == root->val
+        && (dfs(head->next, root->left) || dfs(head->next, root->right));
+  }
+};
 
 class SolutionTLE {
 public:
