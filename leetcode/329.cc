@@ -32,3 +32,48 @@ public:
     return longest;
   }
 };
+
+class Solution_Topological_Sort {
+public:
+  int longestIncreasingPath(vector<vector<int>>& matrix) {
+    int m = matrix.size(), n = matrix.empty() ? 0 : matrix[0].size();
+    vector<vector<int>> degree(m, vector<int>(n, 0));
+    vector<int> dirs = { 0, 0, -1, 1, -1, 1, 0, 0 };
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+        for (int k = 0; k < 4; k++) {
+          int ni = i + dirs[k], nj = j + dirs[k + 4];
+          if (ni < 0 || nj < 0 || ni >= m || nj >= n)
+            continue;
+          if (matrix[i][j] > matrix[ni][nj])
+            degree[i][j]++;
+        }
+      }
+    }
+    queue<pair<int, int>> head;
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+        if (degree[i][j] == 0)
+          head.emplace(i, j);
+      }
+    }
+    int longest = 0;
+    while (!head.empty()) {
+      longest++;
+      for (int _ = head.size(); _ > 0; _--) {
+        auto [i, j] = head.front();
+        head.pop();
+        for (int k = 0; k < 4; k++) {
+          int ni = i + dirs[k], nj = j + dirs[k + 4];
+          if (ni < 0 || nj < 0 || ni >= m || nj >= n)
+            continue;
+          if (matrix[i][j] < matrix[ni][nj]) {
+            if (--degree[ni][nj] == 0)
+              head.emplace(ni, nj);
+          }
+        }
+      }
+    }
+    return longest;
+  }
+};
