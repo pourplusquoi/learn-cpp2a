@@ -11,17 +11,15 @@ public:
     int slow = 0, fast = 0;
     while (fast < s.size()) {
       while (fast < s.size() && poscnt > 0) {
-        if (--count[s[fast]] == 0)
+        if (--count[s[fast++]] == 0)
           poscnt--;
-        fast++;
       }
       // Not found.
       if (poscnt > 0)
         break;
       while (slow < fast && poscnt == 0) {
-        if (count[s[slow]]++ == 0)
+        if (count[s[slow++]]++ == 0)
           poscnt++;
-        slow++;
       }
       int newlen = fast - slow + 1;
       if (newlen < length) {
