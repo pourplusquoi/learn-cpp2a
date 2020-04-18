@@ -1,3 +1,5 @@
+// Lined list with mixed types in compile time.
+
 #include <iostream>
 #include <string>
 #include <string_view>
