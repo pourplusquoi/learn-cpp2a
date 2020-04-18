@@ -49,29 +49,29 @@ constexpr List<> create_list() {
 }
 
 template <typename... T>
-struct CombineLists;
+struct ConcatLists;
 
 template <typename Head, typename Tail, typename... Rest>
-struct CombineLists<List<Head, Tail>, Rest...> {
-  using Type = List<Head, typename CombineLists<Tail, Rest...>::Type>;
+struct ConcatLists<List<Head, Tail>, Rest...> {
+  using Type = List<Head, typename ConcatLists<Tail, Rest...>::Type>;
 };
 
 template <typename... Rest>
-struct CombineLists<List<>, Rest...> {
-  using Type = typename CombineLists<Rest...>::Type;
+struct ConcatLists<List<>, Rest...> {
+  using Type = typename ConcatLists<Rest...>::Type;
 };
 
 template <>
-struct CombineLists<> {
+struct ConcatLists<> {
   using Type = List<>;
 };
 
-template <typename... T, typename Return = typename CombineLists<T...>::Type>
+template <typename... T, typename Return = typename ConcatLists<T...>::Type>
 constexpr Return concat_lists(T&&... lists);
 
 template <typename Head, typename Tail, typename... Rest,
-          typename Return = typename CombineLists<List<Head, Tail>,
-                                                  Decay<Rest>...>::Type>
+          typename Return = typename ConcatLists<List<Head, Tail>,
+                                                 Decay<Rest>...>::Type>
 constexpr Return concat_lists(const List<Head, Tail>& first, Rest&&... rest) {
   return Return {
     first.val,
@@ -80,8 +80,8 @@ constexpr Return concat_lists(const List<Head, Tail>& first, Rest&&... rest) {
 }
 
 template <typename Head, typename Tail, typename... Rest,
-          typename Return = typename CombineLists<List<Head, Tail>,
-                                                  Decay<Rest>...>::Type>
+          typename Return = typename ConcatLists<List<Head, Tail>,
+                                                 Decay<Rest>...>::Type>
 constexpr Return concat_lists(List<Head, Tail>&& first, Rest&&... rest) {
   return Return {
     std::move(first.val),
@@ -90,13 +90,13 @@ constexpr Return concat_lists(List<Head, Tail>&& first, Rest&&... rest) {
 }
 
 template <typename... Rest,
-          typename Return = typename CombineLists<Decay<Rest>...>::Type>
+          typename Return = typename ConcatLists<Decay<Rest>...>::Type>
 constexpr Return concat_lists(const List<>& _, Rest&&... rest) {
   return concat_lists(std::forward<Rest>(rest)...);
 }
 
 template <typename... Rest,
-          typename Return = typename CombineLists<Decay<Rest>...>::Type>
+          typename Return = typename ConcatLists<Decay<Rest>...>::Type>
 constexpr Return concat_lists(List<>&& _, Rest&&... rest) {
   return concat_lists(std::forward<Rest>(rest)...);
 }
@@ -111,8 +111,8 @@ struct ReverseList;
 
 template <typename Head, typename Tail>
 struct ReverseList<List<Head, Tail>> {
-  using Type = typename CombineLists<typename ReverseList<Tail>::Type,
-                                     List<Head, List<>>>::Type;
+  using Type = typename ConcatLists<typename ReverseList<Tail>::Type,
+                                    List<Head, List<>>>::Type;
 };
 
 template <>
@@ -220,7 +220,7 @@ int main () {
       create_list(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
   auto list2 = create_list(std::string("hello"),
                            std::string("world"),
-                           std::string("!"));
+                           std::string("lol"));
   auto result = concat_lists(list1, list2,
                              reverse_list(list2), reverse_list(list1));
   std::cout << to_string<DefaultSerializer>(std::move(result)) << std::endl;
