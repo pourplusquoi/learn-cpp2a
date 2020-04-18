@@ -49,18 +49,8 @@ constexpr List<> create_list() {
 }
 
 template <typename L, typename T>
-constexpr List<Decay<T>, L> push_front(const L& list, T&& val) {
-  return { std::forward<T>(val), list };
-}
-
-template <typename L, typename T>
-constexpr List<Decay<T>, L> push_front(L& list, T&& val) {
-  return { std::forward<T>(val), list };
-}
-
-template <typename L, typename T>
-constexpr List<Decay<T>, L> push_front(L&& list, T&& val) {
-  return { std::forward<T>(val), std::move(list) };
+constexpr List<Decay<T>, Decay<L>> push_front(L&& list, T&& val) {
+  return { std::forward<T>(val), std::forward<L>(list) };
 }
 
 template <typename L, typename T>
@@ -97,6 +87,16 @@ constexpr Return push_back(List<Head, Tail>& list, T&& val) {
 template <typename Head, typename Tail, typename T,
           typename Return = typename PushBack<List<Head, Tail>,
                                               Decay<T>>::Type>
+constexpr Return push_back(const List<Head, Tail>&& list, T&& val) {
+  return {
+    std::move(list).val,
+    push_back(std::move(list).next, std::forward<T>(val))
+  };
+}
+
+template <typename Head, typename Tail, typename T,
+          typename Return = typename PushBack<List<Head, Tail>,
+                                              Decay<T>>::Type>
 constexpr Return push_back(List<Head, Tail>&& list, T&& val) {
   return {
     std::move(list).val,
@@ -112,6 +112,11 @@ constexpr List<Decay<T>, List<>> push_back(const List<>& list, T&& val) {
 template <typename T>
 constexpr List<Decay<T>, List<>> push_back(List<>& list, T&& val) {
   return { std::forward<T>(val), list };
+}
+
+template <typename T>
+constexpr List<Decay<T>, List<>> push_back(const List<>&& list, T&& val) {
+  return { std::forward<T>(val), std::move(list) };
 }
 
 template <typename T>
@@ -208,6 +213,13 @@ constexpr Return reverse_list(List<Head, Tail>& list) {
 
 template <typename Head, typename Tail,
           typename Return = typename ReverseList<List<Head, Tail>>::Type>
+constexpr Return reverse_list(const List<Head, Tail>&& list) {
+  return concat_lists(reverse_list(std::move(list).next),
+                      create_list(std::move(list).val));
+}
+
+template <typename Head, typename Tail,
+          typename Return = typename ReverseList<List<Head, Tail>>::Type>
 constexpr Return reverse_list(List<Head, Tail>&& list) {
   return concat_lists(reverse_list(std::move(list).next),
                       create_list(std::move(list).val));
@@ -220,6 +232,11 @@ constexpr List<> reverse_list(const List<>& list) {
 
 template <>
 constexpr List<> reverse_list(List<>& list) {
+  return list;
+}
+
+template <>
+constexpr List<> reverse_list(const List<>&& list) {
   return list;
 }
 
@@ -244,8 +261,15 @@ inline std::string to_string(List<Head, Tail>& list) {
 }
 
 template <template <typename> class Serializer, typename Head, typename Tail>
+inline std::string to_string(const List<Head, Tail>&& list) {
+  Serializer<decltype((std::move(list).val))> serializer;
+  return serializer((std::move(list).val)) + " -> " +
+      to_string<Serializer>(std::move(list).next);
+}
+
+template <template <typename> class Serializer, typename Head, typename Tail>
 inline std::string to_string(List<Head, Tail>&& list) {
-  Serializer<decltype(std::move(list).val)> serializer;
+  Serializer<decltype((std::move(list).val))> serializer;
   return serializer(std::move(list).val) + " -> " +
       to_string<Serializer>(std::move(list).next);
 }
@@ -257,6 +281,11 @@ inline std::string to_string(const List<>& _) {
 
 template <template <typename> class Serializer>
 inline std::string to_string(List<>& _) {
+  return "null";
+}
+
+template <template <typename> class Serializer>
+inline std::string to_string(const List<>&& _) {
   return "null";
 }
 
@@ -280,8 +309,22 @@ struct DefaultSerializer<const std::string&> {
 };
 
 template <>
-struct DefaultSerializer<std::string> {
-  inline std::string operator()(std::string&& val) const {
+struct DefaultSerializer<std::string&> {
+  inline std::string operator()(const std::string& val) const {
+    return val;
+  }
+};
+
+template <>
+struct DefaultSerializer<const std::string&&> {
+  inline std::string operator()(const std::string&& val) const {
+    return std::move(val);
+  }
+};
+
+template <>
+struct DefaultSerializer<std::string&&> {
+  inline std::string operator()(const std::string&& val) const {
     return std::move(val);
   }
 };
@@ -289,13 +332,13 @@ struct DefaultSerializer<std::string> {
 int main () {
   constexpr auto list1 =
       create_list(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
-  auto list2 = create_list(std::string("hello"),
-                           std::string("world"),
-                           std::string("lol"));
-  auto list3 = push_front(std::move(list2), std::string("front"));
-  auto list4 = push_back(list3, std::string("back"));
-  auto result = concat_lists(list1, list4,
-                             reverse_list(list4),
-                             reverse_list(list1));
+  const auto list2 = create_list(std::string("hello"),
+                                 std::string("world"),
+                                 std::string("lol"));
+  const auto list3 = push_front(std::move(list2), std::string("front"));
+  const auto list4 = push_back(std::move(list3), std::string("back"));
+  const auto result = concat_lists(std::move(list1), std::move(list4),
+                                   std::move(reverse_list(std::move(list4))),
+                                   std::move(reverse_list(std::move(list1))));
   std::cout << to_string<DefaultSerializer>(std::move(result)) << std::endl;
 }
