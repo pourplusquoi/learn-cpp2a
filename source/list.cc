@@ -10,7 +10,7 @@
 //   std::cout << to_string<DefaultSerializer>(list6) << std::endl;
 //
 // [stdout]
-//   1 -> 2 -> 3.000000 -> c -> plus -> plus -> 17 -> null
+//   1 -> 2 -> 3.000000 -> c -> plus -> plus -> 17 -> ()
 //
 // [code]
 //   constexpr auto list7 = pop_back(list6);
@@ -25,7 +25,7 @@
 //   std::cout << to_string<DefaultSerializer>(list15) << std::endl;
 //
 // [stdout]
-//   64 -> c -> 99 -> ? -> null
+//   64 -> c -> 99 -> ? -> ()
 
 #include <iostream>
 #include <string>
@@ -359,22 +359,22 @@ inline std::string to_string(List<Head, Tail>&& list) {
 
 template <template <typename> class Serializer>
 inline std::string to_string(const List<>& _) {
-  return "null";
+  return "()";
 }
 
 template <template <typename> class Serializer>
 inline std::string to_string(List<>& _) {
-  return "null";
+  return "()";
 }
 
 template <template <typename> class Serializer>
 inline std::string to_string(const List<>&& _) {
-  return "null";
+  return "()";
 }
 
 template <template <typename> class Serializer>
 inline std::string to_string(List<>&& _) {
-  return "null";
+  return "()";
 }
 
 template <typename T>
