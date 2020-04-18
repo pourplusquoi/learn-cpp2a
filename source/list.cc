@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <utility>
 
 template <typename T>
@@ -302,43 +303,42 @@ struct DefaultSerializer {
 };
 
 template <>
-struct DefaultSerializer<const std::string&> {
-  inline std::string operator()(const std::string& val) const {
-    return val;
+struct DefaultSerializer<const std::string_view&> {
+  inline std::string operator()(const std::string_view& val) const {
+    return std::string(val);
   }
 };
 
 template <>
-struct DefaultSerializer<std::string&> {
-  inline std::string operator()(const std::string& val) const {
-    return val;
+struct DefaultSerializer<std::string_view&> {
+  inline std::string operator()(const std::string_view& val) const {
+    return std::string(val);
   }
 };
 
 template <>
-struct DefaultSerializer<const std::string&&> {
-  inline std::string operator()(const std::string&& val) const {
-    return std::move(val);
+struct DefaultSerializer<const std::string_view&&> {
+  inline std::string operator()(const std::string_view&& val) const {
+    return std::string(std::move(val));
   }
 };
 
 template <>
-struct DefaultSerializer<std::string&&> {
-  inline std::string operator()(const std::string&& val) const {
-    return std::move(val);
+struct DefaultSerializer<std::string_view&&> {
+  inline std::string operator()(const std::string_view&& val) const {
+    return std::string(std::move(val));
   }
 };
 
 int main () {
+  using namespace std::literals;
   constexpr auto list1 =
       create_list(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
-  const auto list2 = create_list(std::string("hello"),
-                                 std::string("world"),
-                                 std::string("lol"));
-  const auto list3 = push_front(std::move(list2), std::string("front"));
-  const auto list4 = push_back(std::move(list3), std::string("back"));
-  const auto result = concat_lists(std::move(list1), std::move(list4),
-                                   std::move(reverse_list(std::move(list4))),
-                                   std::move(reverse_list(std::move(list1))));
+  constexpr auto list2 = create_list("hello"sv, "world"sv, "lol"sv);
+  constexpr auto list3 = push_front(std::move(list2), "front"sv);
+  constexpr auto list4 = push_back(std::move(list3), "back"sv);
+  constexpr auto result = concat_lists(std::move(list1), std::move(list4),
+                                       std::move(reverse_list(std::move(list4))),
+                                       std::move(reverse_list(std::move(list1))));
   std::cout << to_string<DefaultSerializer>(std::move(result)) << std::endl;
 }
