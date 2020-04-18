@@ -1,4 +1,31 @@
-// Lined list with mixed types in compile time.
+// Compile time linked list, supports mixed types.
+//
+// [code]
+//   constexpr auto list1 = create_list(1, 2, 3.0);
+//   constexpr auto list2 = create_list("c"sv);
+//   constexpr auto list3 = create_list("plus"sv);
+//   constexpr auto list4 = create_list("plus"sv);
+//   constexpr auto list5 = create_list("17"sv);
+//   constexpr auto list6 = concat_lists(list1, list2, list3, list4, list5);
+//   std::cout << to_string<DefaultSerializer>(list6) << std::endl;
+//
+// [stdout]
+//   1 -> 2 -> 3.000000 -> c -> plus -> plus -> 17 -> null
+//
+// [code]
+//   constexpr auto list7 = pop_back(list6);
+//   constexpr auto list8 = pop_back(list7);
+//   constexpr auto list9 = pop_back(list8);
+//   constexpr auto list10 = pop_front(list9);
+//   constexpr auto list11 = pop_front(list10);
+//   constexpr auto list12 = pop_front(list11);
+//   constexpr auto list13 = push_front(list12, 64);
+//   constexpr auto list14 = push_back(list13, "99");
+//   constexpr auto list15 = push_back(list14, "?");
+//   std::cout << to_string<DefaultSerializer>(list15) << std::endl;
+//
+// [stdout]
+//   64 -> c -> 99 -> ? -> null
 
 #include <iostream>
 #include <string>
@@ -141,14 +168,14 @@ template <
     typename Head, typename Next, typename Tail,
     typename Return = typename PopBack<List<Head, List<Next, Tail>>>::Type>
 constexpr Return pop_back(const List<Head, List<Next, Tail>>& list) {
-  return {list.head, pop_back(list.next)};
+  return {list.val, pop_back(list.next)};
 }
 
 template <
     typename Head, typename Next, typename Tail,
     typename Return = typename PopBack<List<Head, List<Next, Tail>>>::Type>
 constexpr Return pop_back(List<Head, List<Next, Tail>>& list) {
-  return {list.head, pop_back(list.next)};
+  return {list.val, pop_back(list.next)};
 }
 
 template <
