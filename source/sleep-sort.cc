@@ -4,8 +4,6 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
-
 int main() {
     std::vector<int> array {5,4,3,7,6,8,5,1,2,3,6,7,4,8,5,1,5,6,12,
         9,3,7,4,8,62,3,1,4,8,1,2,3,6,5,7,8,46,9,3,2,9,45,3,2,9,8,3,
@@ -17,8 +15,8 @@ int main() {
     std::shared_future<void> ready_future(ready_promise.get_future());
 
     std::vector<std::function<void()>> thread_func;
-    for (int i = 0; i < array.size(); i++) {
-        auto func = [&, i, ready_future]() -> void {
+    for (auto i = 0; i < array.size(); i++) {
+        auto func = [&, i, ready_future]() {
             thread_promise[i].set_value();
             std::string out = std::to_string(array[i]) + " ";
             ready_future.wait();
@@ -33,11 +31,12 @@ int main() {
         thread_future.push_back(tp.get_future());
 
     std::vector<std::future<void>> thread_result;
-    for (int i = 0; i < array.size(); i++)
+    for (auto i = 0; i < array.size(); i++)
         thread_result.push_back(std::async(std::launch::async, thread_func[i]));
 
-    for (auto& tf : thread_future)
+    for (auto& tf : thread_future) {
         tf.wait();
+    }
 
     ready_promise.set_value();
 
