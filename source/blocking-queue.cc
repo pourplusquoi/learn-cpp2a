@@ -34,7 +34,7 @@ public:
       return !IsEmpty();
     });
 
-    const T& ret = data_[begin_];
+    T ret = data_[begin_];
     begin_ = (begin_ + 1) % data_.size();
 
     lock.unlock();

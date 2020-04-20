@@ -1,3 +1,32 @@
+// Compile time linked list, supports mixed types.
+//
+// [code]
+//   constexpr auto list1 = create_list(1, 2, 3.0);
+//   constexpr auto list2 = create_list("c"sv);
+//   constexpr auto list3 = create_list("plus"sv);
+//   constexpr auto list4 = create_list("plus"sv);
+//   constexpr auto list5 = create_list("17"sv);
+//   constexpr auto list6 = concat_lists(list1, list2, list3, list4, list5);
+//   std::cout << to_string<DefaultSerializer>(list6) << std::endl;
+//
+// [stdout]
+//   1 -> 2 -> 3.000000 -> c -> plus -> plus -> 17 -> ()
+//
+// [code]
+//   constexpr auto list7 = pop_back(list6);
+//   constexpr auto list8 = pop_back(list7);
+//   constexpr auto list9 = pop_back(list8);
+//   constexpr auto list10 = pop_front(list9);
+//   constexpr auto list11 = pop_front(list10);
+//   constexpr auto list12 = pop_front(list11);
+//   constexpr auto list13 = push_front(list12, 64);
+//   constexpr auto list14 = push_back(list13, "99");
+//   constexpr auto list15 = push_back(list14, "?");
+//   std::cout << to_string<DefaultSerializer>(list15) << std::endl;
+//
+// [stdout]
+//   64 -> c -> 99 -> ? -> ()
+
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -34,24 +63,26 @@ struct CreateList<> {
 template <typename... T>
 constexpr List<Decay<T>...> create_list(T&&... vals);
 
-template <typename Head, typename... Rest,
-          typename Return = typename CreateList<Decay<Head>,
-                                                Decay<Rest>...>::Type>
+template <
+    typename Head, typename... Rest,
+    typename Return = typename CreateList<Decay<Head>, Decay<Rest>...>::Type>
 constexpr Return create_list(Head&& head, Rest&&... rest) {
-  return {
-    std::forward<Head>(head),
-    create_list(std::forward<Rest>(rest)...)
-  };
+  return {std::forward<Head>(head), create_list(std::forward<Rest>(rest)...)};
 }
 
 template <>
 constexpr List<> create_list() {
-  return List<> {};
+  return List<>{};
 }
 
 template <typename L, typename T>
 constexpr List<Decay<T>, Decay<L>> push_front(L&& list, T&& val) {
-  return { std::forward<T>(val), std::forward<L>(list) };
+  return {std::forward<T>(val), std::forward<L>(list)};
+}
+
+template <typename L>
+constexpr auto pop_front(L&& list) {
+  return std::forward<L>(list).next;
 }
 
 template <typename L, typename T>
@@ -72,57 +103,113 @@ template <typename L, typename T,
 constexpr Return push_back(L&& list, T&& val);
 
 template <typename Head, typename Tail, typename T,
-          typename Return = typename PushBack<List<Head, Tail>,
-                                              Decay<T>>::Type>
+          typename Return = typename PushBack<List<Head, Tail>, Decay<T>>::Type>
 constexpr Return push_back(const List<Head, Tail>& list, T&& val) {
-  return { list.val, push_back(list.next, std::forward<T>(val)) };
+  return {list.val, push_back(list.next, std::forward<T>(val))};
 }
 
 template <typename Head, typename Tail, typename T,
-          typename Return = typename PushBack<List<Head, Tail>,
-                                              Decay<T>>::Type>
+          typename Return = typename PushBack<List<Head, Tail>, Decay<T>>::Type>
 constexpr Return push_back(List<Head, Tail>& list, T&& val) {
-  return { list.val, push_back(list.next, std::forward<T>(val)) };
+  return {list.val, push_back(list.next, std::forward<T>(val))};
 }
 
 template <typename Head, typename Tail, typename T,
-          typename Return = typename PushBack<List<Head, Tail>,
-                                              Decay<T>>::Type>
+          typename Return = typename PushBack<List<Head, Tail>, Decay<T>>::Type>
 constexpr Return push_back(const List<Head, Tail>&& list, T&& val) {
-  return {
-    std::move(list).val,
-    push_back(std::move(list).next, std::forward<T>(val))
-  };
+  return {std::move(list).val,
+          push_back(std::move(list).next, std::forward<T>(val))};
 }
 
 template <typename Head, typename Tail, typename T,
-          typename Return = typename PushBack<List<Head, Tail>,
-                                              Decay<T>>::Type>
+          typename Return = typename PushBack<List<Head, Tail>, Decay<T>>::Type>
 constexpr Return push_back(List<Head, Tail>&& list, T&& val) {
-  return {
-    std::move(list).val,
-    push_back(std::move(list).next, std::forward<T>(val))
-  };
+  return {std::move(list).val,
+          push_back(std::move(list).next, std::forward<T>(val))};
 }
 
 template <typename T>
 constexpr List<Decay<T>, List<>> push_back(const List<>& list, T&& val) {
-  return { std::forward<T>(val), list };
+  return {std::forward<T>(val), list};
 }
 
 template <typename T>
 constexpr List<Decay<T>, List<>> push_back(List<>& list, T&& val) {
-  return { std::forward<T>(val), list };
+  return {std::forward<T>(val), list};
 }
 
 template <typename T>
 constexpr List<Decay<T>, List<>> push_back(const List<>&& list, T&& val) {
-  return { std::forward<T>(val), std::move(list) };
+  return {std::forward<T>(val), std::move(list)};
 }
 
 template <typename T>
 constexpr List<Decay<T>, List<>> push_back(List<>&& list, T&& val) {
-  return { std::forward<T>(val), std::move(list) };
+  return {std::forward<T>(val), std::move(list)};
+}
+
+template <typename L>
+struct PopBack;
+
+template <typename Head, typename Next, typename Tail>
+struct PopBack<List<Head, List<Next, Tail>>> {
+  using Type = List<Head, typename PopBack<List<Next, Tail>>::Type>;
+};
+
+template <typename Head>
+struct PopBack<List<Head, List<>>> {
+  using Type = List<>;
+};
+
+template <typename L, typename Return = typename PopBack<Decay<L>>::Type>
+constexpr Return pop_back(L&& list);
+
+template <
+    typename Head, typename Next, typename Tail,
+    typename Return = typename PopBack<List<Head, List<Next, Tail>>>::Type>
+constexpr Return pop_back(const List<Head, List<Next, Tail>>& list) {
+  return {list.val, pop_back(list.next)};
+}
+
+template <
+    typename Head, typename Next, typename Tail,
+    typename Return = typename PopBack<List<Head, List<Next, Tail>>>::Type>
+constexpr Return pop_back(List<Head, List<Next, Tail>>& list) {
+  return {list.val, pop_back(list.next)};
+}
+
+template <
+    typename Head, typename Next, typename Tail,
+    typename Return = typename PopBack<List<Head, List<Next, Tail>>>::Type>
+constexpr Return pop_back(const List<Head, List<Next, Tail>>&& list) {
+  return {std::move(list).val, pop_back(std::move(list).next)};
+}
+
+template <
+    typename Head, typename Next, typename Tail,
+    typename Return = typename PopBack<List<Head, List<Next, Tail>>>::Type>
+constexpr Return pop_back(List<Head, List<Next, Tail>>&& list) {
+  return {std::move(list).val, pop_back(std::move(list).next)};
+}
+
+template <typename Head>
+constexpr List<> pop_back(const List<Head, List<>>& list) {
+  return list.next;
+}
+
+template <typename Head>
+constexpr List<> pop_back(List<Head, List<>>& list) {
+  return list.next;
+}
+
+template <typename Head>
+constexpr List<> pop_back(const List<Head, List<>>&& list) {
+  return std::move(list).next;
+}
+
+template <typename Head>
+constexpr List<> pop_back(List<Head, List<>>&& list) {
+  return std::move(list).next;
 }
 
 template <typename... T>
@@ -147,23 +234,18 @@ template <typename... T, typename Return = typename ConcatLists<T...>::Type>
 constexpr Return concat_lists(T&&... lists);
 
 template <typename Head, typename Tail, typename... Rest,
-          typename Return = typename ConcatLists<List<Head, Tail>,
-                                                 Decay<Rest>...>::Type>
+          typename Return =
+              typename ConcatLists<List<Head, Tail>, Decay<Rest>...>::Type>
 constexpr Return concat_lists(const List<Head, Tail>& first, Rest&&... rest) {
-  return {
-    first.val,
-    concat_lists(first.next, std::forward<Rest>(rest)...)
-  };
+  return {first.val, concat_lists(first.next, std::forward<Rest>(rest)...)};
 }
 
 template <typename Head, typename Tail, typename... Rest,
-          typename Return = typename ConcatLists<List<Head, Tail>,
-                                                 Decay<Rest>...>::Type>
+          typename Return =
+              typename ConcatLists<List<Head, Tail>, Decay<Rest>...>::Type>
 constexpr Return concat_lists(List<Head, Tail>&& first, Rest&&... rest) {
-  return {
-    std::move(first).val,
-    concat_lists(std::move(first).next, std::forward<Rest>(rest)...)
-  };
+  return {std::move(first).val,
+          concat_lists(std::move(first).next, std::forward<Rest>(rest)...)};
 }
 
 template <typename... Rest,
@@ -180,7 +262,7 @@ constexpr Return concat_lists(List<>&& _, Rest&&... rest) {
 
 template <>
 constexpr List<> concat_lists() {
-  return List<> {};
+  return List<>{};
 }
 
 template <typename T>
@@ -265,34 +347,34 @@ template <template <typename> class Serializer, typename Head, typename Tail>
 inline std::string to_string(const List<Head, Tail>&& list) {
   Serializer<decltype((std::move(list).val))> serializer;
   return serializer((std::move(list).val)) + " -> " +
-      to_string<Serializer>(std::move(list).next);
+         to_string<Serializer>(std::move(list).next);
 }
 
 template <template <typename> class Serializer, typename Head, typename Tail>
 inline std::string to_string(List<Head, Tail>&& list) {
   Serializer<decltype((std::move(list).val))> serializer;
   return serializer(std::move(list).val) + " -> " +
-      to_string<Serializer>(std::move(list).next);
+         to_string<Serializer>(std::move(list).next);
 }
 
 template <template <typename> class Serializer>
 inline std::string to_string(const List<>& _) {
-  return "null";
+  return "()";
 }
 
 template <template <typename> class Serializer>
 inline std::string to_string(List<>& _) {
-  return "null";
+  return "()";
 }
 
 template <template <typename> class Serializer>
 inline std::string to_string(const List<>&& _) {
-  return "null";
+  return "()";
 }
 
 template <template <typename> class Serializer>
 inline std::string to_string(List<>&& _) {
-  return "null";
+  return "()";
 }
 
 template <typename T>
@@ -330,15 +412,18 @@ struct DefaultSerializer<std::string_view&&> {
   }
 };
 
-int main () {
+int main() {
   using namespace std::literals;
   constexpr auto list1 =
       create_list(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
   constexpr auto list2 = create_list("hello"sv, "world"sv, "lol"sv);
   constexpr auto list3 = push_front(std::move(list2), "front"sv);
   constexpr auto list4 = push_back(std::move(list3), "back"sv);
-  constexpr auto result = concat_lists(std::move(list1), std::move(list4),
-                                       std::move(reverse_list(std::move(list4))),
-                                       std::move(reverse_list(std::move(list1))));
-  std::cout << to_string<DefaultSerializer>(std::move(result)) << std::endl;
+  constexpr auto list5 = concat_lists(std::move(list1), std::move(list4),
+                                      reverse_list(std::move(list4)),
+                                      reverse_list(std::move(list1)));
+  std::cout << to_string<DefaultSerializer>(std::move(list5)) << std::endl;
+  constexpr auto list6 = pop_front(pop_front(std::move(list5)));
+  constexpr auto list7 = pop_back(pop_back(std::move(list6)));
+  std::cout << to_string<DefaultSerializer>(std::move(list7)) << std::endl;
 }
