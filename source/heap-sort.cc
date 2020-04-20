@@ -8,10 +8,10 @@ constexpr void swap(T& a, T& b) {
   b = std::move(c);
 }
 
-template <
-    typename T,
-    typename E = decltype(std::declval<T>()[0]),
-    typename Compare = std::less<E>>
+template <typename T>
+using ElemT = decltype(std::declval<T>()[0]);
+
+template <typename T, typename E = ElemT<T>, typename Compare = std::less<E>>
 constexpr void swim(T&& nums, std::size_t idx) {
   Compare lt;
   while (idx > 0) {
@@ -24,10 +24,7 @@ constexpr void swim(T&& nums, std::size_t idx) {
   }
 }
 
-template <
-    typename T,
-    typename E = decltype(std::declval<T>()[0]),
-    typename Compare = std::less<E>>
+template <typename T, typename E = ElemT<T>, typename Compare = std::less<E>>
 constexpr void sink(T&& nums, std::size_t end) {
   Compare lt;
   auto idx = 0;
@@ -47,20 +44,14 @@ constexpr void sink(T&& nums, std::size_t end) {
   }
 }
 
-template <
-    typename T,
-    typename E = decltype(std::declval<T>()[0]),
-    typename Compare = std::less<E>>
+template <typename T, typename E = ElemT<T>, typename Compare = std::less<E>>
 constexpr void make_heap(T&& nums) {
   for (auto i = 0; i < nums.size(); i++) {
     swim(std::forward<T>(nums), i);
   }
 }
 
-template <
-    typename T,
-    typename E = decltype(std::declval<T>()[0]),
-    typename Compare = std::less<E>>
+template <typename T, typename E = ElemT<T>, typename Compare = std::less<E>>
 constexpr decltype(auto) heap_sort(T&& nums) {
   auto heap = nums;
   make_heap(heap);
