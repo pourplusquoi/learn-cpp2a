@@ -48,7 +48,7 @@ constexpr decltype(auto) sink(const std::array<T, N>& nums, std::size_t end) {
 }
 
 template <typename T, std::size_t N, typename Compare = std::less<T>>
-constexpr std::array<T, N> make_heap(const std::array<T, N>& nums) {
+constexpr decltype(auto) make_heap(const std::array<T, N>& nums) {
   auto ret = nums;
   for (auto i = 0; i < N; i++) {
     ret = swim(ret, i);
@@ -57,7 +57,7 @@ constexpr std::array<T, N> make_heap(const std::array<T, N>& nums) {
 }
 
 template <typename T, std::size_t N, typename Compare = std::less<T>>
-constexpr std::array<T, N> heap_sort(const std::array<T, N>& nums) {
+constexpr decltype(auto) heap_sort(const std::array<T, N>& nums) {
   auto heap = make_heap(nums);
   auto ret = heap;
   for (std::size_t i = 0, j = N - 1; i < N; i++, j--) {
