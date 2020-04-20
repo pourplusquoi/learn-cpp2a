@@ -51,7 +51,7 @@ inline RandomIt Median(RandomIt a, RandomIt b, RandomIt c) {
 
 template <typename RandomIt, typename Comparator>
 auto nth_element = MakeCombinator(
-    [](auto sub, RandomIt first, RandomIt nth, RandomIt last) -> void {
+    [](auto sub, RandomIt first, RandomIt nth, RandomIt last) {
       if (first >= last || first > nth || nth >= last) {
         return;
       }
@@ -90,7 +90,7 @@ auto nth_element = MakeCombinator(
 
 template <typename RandomIt, typename Comparator>
 auto quick_sort = MakeCombinator(
-    [](auto sub, RandomIt first, RandomIt last) -> void {
+    [](auto sub, RandomIt first, RandomIt last) {
       if (first >= last) {
         return;
       }
@@ -142,10 +142,10 @@ auto random_shuffle = MakeCombinator(
     });
 
 int main() {
-  constexpr int size = 64;
+  constexpr auto size = 64;
 
   std::vector<int> array(size);
-  for (int i = 0; i < size; i++) {
+  for (auto i = 0; i < size; i++) {
     array[i] = i + 1;
   }
 
@@ -155,12 +155,12 @@ int main() {
   random_shuffle<Iterator, std::mt19937&>(array.begin(), array.end(), g);
 
   nth_element<Iterator, std::less<int>>(array.begin(), array.begin() + 27, array.end());
-  for (auto val : array)
+  for (const auto& val : array)
     std::cout << val << " ";
   std::cout << std::endl;
 
   quick_sort<Iterator, std::less<int>>(array.begin(), array.end());
-  for (auto val : array)
+  for (const auto& val : array)
     std::cout << val << " ";
   std::cout << std::endl;
 
