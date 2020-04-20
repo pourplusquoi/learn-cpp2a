@@ -1,5 +1,5 @@
-#ifndef UNWRAP_REFWRAPPER_H
-#define UNWRAP_REFWRAPPER_H
+#ifndef UNWRAP_REFWRAPPER_H_
+#define UNWRAP_REFWRAPPER_H_
 
 #include <functional>
 #include <type_traits>
@@ -17,4 +17,4 @@ struct unwrap_refwrapper<std::reference_wrapper<T>> {
 template <class T>
 using special_decay_t = typename ::unwrap_refwrapper<typename std::decay<T>::type>::type;
 
-#endif
+#endif  // UNWRAP_REFWRAPPER_H_
