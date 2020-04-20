@@ -2,31 +2,28 @@
 #include <iostream>
 
 template <typename T>
-constexpr std::pair<T, T> swap(const T& a, const T& b) {
-  return {b, a};
+constexpr void swap(T& a, T& b) {
+  T c = std::move(a);
+  a = std::move(b);
+  b = std::move(c);
 }
 
 template <typename T, std::size_t N, typename Compare = std::less<T>>
-constexpr decltype(auto) swim(const std::array<T, N>& nums, std::size_t idx) {
+constexpr void swim(std::array<T, N>& nums, std::size_t idx) {
   Compare lt;
-  auto ret = nums;
   while (idx > 0) {
     auto par = (idx - 1) / 2;
-    if (!lt(ret[idx], ret[par])) {
+    if (!lt(nums[idx], nums[par])) {
       break;
     }
-    const auto& [a, b] = swap(ret[idx], ret[par]);
-    ret[idx] = std::move(a);
-    ret[par] = std::move(b);
+    swap(nums[idx], nums[par]);
     idx = par;
   }
-  return ret;
 }
 
 template <typename T, std::size_t N, typename Compare = std::less<T>>
-constexpr decltype(auto) sink(const std::array<T, N>& nums, std::size_t end) {
+constexpr void sink(std::array<T, N>& nums, std::size_t end) {
   Compare lt;
-  auto ret = nums;
   auto idx = 0;
   while (idx < end) {
     const auto lhs = idx * 2 + 1;
@@ -34,38 +31,33 @@ constexpr decltype(auto) sink(const std::array<T, N>& nums, std::size_t end) {
       break;
     }
     const auto rhs = lhs + 1;
-    const bool cmp = (rhs >= end) || lt(ret[lhs], ret[rhs]);
-    auto& child = cmp ? ret[lhs] : ret[rhs];
-    if (!lt(child, ret[idx])) {
+    const bool cmp = (rhs >= end) || lt(nums[lhs], nums[rhs]);
+    auto& child = cmp ? nums[lhs] : nums[rhs];
+    if (!lt(child, nums[idx])) {
       break;
     }
-    const auto& [a, b] = swap(ret[idx], child);
-    ret[idx] = std::move(a);
-    child = std::move(b);
+    swap(nums[idx], child);
     idx = cmp ? lhs : rhs;
   }
-  return ret;
 }
 
 template <typename T, std::size_t N, typename Compare = std::less<T>>
-constexpr decltype(auto) make_heap(const std::array<T, N>& nums) {
-  auto ret = nums;
+constexpr void make_heap(std::array<T, N>& nums) {
   for (auto i = 0; i < N; i++) {
-    ret = swim(ret, i);
+    swim(nums, i);
   }
-  return ret;
 }
 
 template <typename T, std::size_t N, typename Compare = std::less<T>>
-constexpr decltype(auto) heap_sort(const std::array<T, N>& nums) {
-  auto heap = make_heap(nums);
-  auto ret = heap;
+constexpr decltype(auto) heap_sort(std::array<T, N> nums) {
+  make_heap(nums);
+  auto sorted = nums;
   for (std::size_t i = 0, j = N - 1; i < N; i++, j--) {
-    ret[i] = std::move(heap[0]);
-    heap[0] = std::move(heap[j]);
-    heap = sink(heap, j);
+    sorted[i] = std::move(nums[0]);
+    nums[0] = std::move(nums[j]);
+    sink(nums, j);
   }
-  return ret;
+  return sorted;
 }
 
 int main() {
