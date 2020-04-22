@@ -1,6 +1,6 @@
+#include <chrono>
 #include <iostream>
 #include <type_traits>
-#include <chrono>
 
 template <int ...Currency>
 struct NumPayment;
@@ -34,6 +34,6 @@ int main() {
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
-    cout << res << endl << elapsed_seconds.count() << endl;
+    std::cout << res << std::endl << elapsed_seconds.count() << std::endl;
     return 0;
 }
