@@ -14,7 +14,7 @@ void push(std::vector<ElemDecay>& container, Elem&& elem) {
 template <typename Fn>
 struct Filter {
   Fn fn;
-  Filter(Fn&& fn) : fn(std::move(fn)) {}
+  explicit Filter(Fn&& fn) : fn(std::move(fn)) {}
 
   template <template <typename> class Container, typename Elem>
   Container<Elem> operator()(const Container<Elem>& container) {
@@ -31,7 +31,7 @@ struct Filter {
 template <typename Fn>
 struct Transform {
   Fn fn;
-  Transform(Fn&& fn) : fn(std::move(fn)) {}
+  explicit Transform(Fn&& fn) : fn(std::move(fn)) {}
 
   template <
       template <typename> class Container, typename ElemIn,
