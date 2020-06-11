@@ -45,9 +45,9 @@ struct Transform {
   }
 };
 
-template <template <typename> class Container, typename ElemIn,
+template <template <typename> class Container, typename Elem,
           typename Operation>
-auto operator|(const Container<ElemIn>& container, Operation&& operation) {
+auto operator|(const Container<Elem>& container, Operation&& operation) {
   return operation(container);
 }
 
